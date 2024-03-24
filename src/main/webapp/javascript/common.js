@@ -88,7 +88,7 @@ function ShowControls() {
 		clearInterval(delayTimer);
 	}
 	
-    document.getElementById("ControlsContainer").style.display = "flex";
+    document.getElementById("ControlsContainer").style.display    = "block";
 	document.getElementById("ControlsContainer").style.visibility = "visible";
 	
 	if (null == controlsTimer) {

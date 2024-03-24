@@ -60,39 +60,38 @@ public class ImageServer extends HttpServlet {
 	private String url;
 	
        
-    /**
-     * Constructor (default).
-     */
-    public ImageServer() {
-        super();
-        
-        diags = new Diagnostics(whoAmI);
-        
-        String absolutePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        
-        absolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/ImageServer"));
-        
-        String decodedStr = null;
+ /**
+  * Constructor (default).
+  */
+ public ImageServer() {
+  super();
+  
+  diags = new Diagnostics(whoAmI);
+  
+  String absolutePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+  
+  absolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/ImageServer"));
+  
+  String decodedStr = null;
         
 		try {
 			decodedStr = java.net.URLDecoder.decode(absolutePath, StandardCharsets.UTF_8.name());
 		} catch (UnsupportedEncodingException e) {
 			diags.exceptional(whoAmI, "ImageServer", e.getMessage(), "", false);
 			
-	        diags.logSubExit(whoAmI, "ImageServer", "", ""); 
+	  diags.logSubExit(whoAmI, "ImageServer", "", ""); 
 			
 			return;
 		}
         
-		
-        diags.logSubCall(whoAmI, "ImageServer", decodedStr, "");
-        
-        conf = new Configuration(diags, decodedStr + "\\ImageServer\\conf\\Conf.xml" );
-        
-        conf.loadConfiguration();
-                  
-        diags.logSubExit(whoAmI, "ImageServer", "", "");        
-    }
+  diags.logSubCall(whoAmI, "ImageServer", decodedStr, "");
+ 
+  conf = new Configuration(diags, decodedStr + "\\ImageServer\\conf\\Conf.xml" );
+ 
+  conf.loadConfiguration();
+           
+  diags.logSubExit(whoAmI, "ImageServer", "", "");        
+ }
 
 	/**
 	 * Handle html get request.
@@ -100,10 +99,10 @@ public class ImageServer extends HttpServlet {
 	 * @param request  HttpServletRequest object.
 	 * @param response HttpServletResponse object.
 	 */
-    @Override
-	protected void doGet(HttpServletRequest  request, 
-			             HttpServletResponse response) throws IOException,
-	                                                          ServletException {		
+  @Override
+	 protected void doGet(HttpServletRequest  request, 
+			                    HttpServletResponse response) throws IOException,
+	                                                    ServletException {		
 		diags.logSubCall(whoAmI, "doGet", (null != request.getQueryString() ? request.getQueryString() : ""), "");
 		
 		url = request.getRequestURL().toString();
@@ -181,7 +180,7 @@ public class ImageServer extends HttpServlet {
 	 */
     @Override
 	protected void doPost(HttpServletRequest request, 
-			              HttpServletResponse response) throws IOException,
+			                    HttpServletResponse response) throws IOException,
 	                                                           ServletException {	
 		diags.logSubCall(whoAmI, "doPost", request.toString(), "");
 		
@@ -241,12 +240,12 @@ public class ImageServer extends HttpServlet {
 		
 		response.setContentType("text/html");
 		
-        GetRandomFileResult result = getRandomImagePathFileName();		
+  GetRandomFileResult result = getRandomImagePathFileName();		
 		
 		String filePathNameStr = result.getRandomPathFileName();
-        String filePathNameEncStr = "";
+  String filePathNameEncStr = "";
         
-        try {
+  try {
 			filePathNameEncStr = java.net.URLEncoder.encode(filePathNameStr, StandardCharsets.UTF_8.name());
 		} catch (UnsupportedEncodingException e) {
 			diags.exceptional(whoAmI, "showDefaultScreen", e.getMessage(), "", true);	
@@ -256,49 +255,59 @@ public class ImageServer extends HttpServlet {
 		
 		printWriter.println("<!DOCTYPE html>");
 		printWriter.println("<html>");
-        printWriter.println(" <head>");
-        printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\">");
-        printWriter.println("  <script src=\"javascript/common.js\"></script>");
-        printWriter.println(" </head>");        
-        printWriter.println(" <body class=\"mainpagebodystyle\" id=\"MainPage\" onLoad=\"InitializePage();\">");
+  printWriter.println(" <head>");
+  printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\">");
+  printWriter.println("  <script src=\"javascript/common.js\"></script>");
+  printWriter.println(" </head>");        
+  printWriter.println(" <body class=\"mainpagebodystyle\" id=\"MainPage\" onLoad=\"InitializePage();\">");
         
-        // Conditionally displayed when the user clicks the screen: 
+  // Conditionally displayed when the user clicks the screen: 
         
-	        printWriter.println("  <div id=\"ControlsContainer\" style=\"background-color: lightblue; display: none; height: 100px; justify-content: center; align-items: center; visibility: collapse; width: 100%;\">");
-			printWriter.println("   <form id=\"ConfigForm\" method=\"post\" name=\"ConfigForm\">");     
-			printWriter.println("    <input id=\"action\" name=\"action\" type=\"hidden\" value=\"placeholder\">");	 // Page javascript will modify this via button onclick handler.	
-			printWriter.println("    <input id=\"availableFiles\" name=\"availableFiles\" type=\"hidden\" value=\"" + result.getAvailableImages().toString() + "\">");			
-			printWriter.println("    <input id=\"filePathName\" name=\"filePathName\" type=\"hidden\" value=\"" + filePathNameStr + "\">");			
-			printWriter.println("    <input id=\"serverUrl\" name=\"serverUrl\" type=\"hidden\" value=\"" + url + "\">");	
-	        printWriter.println("    <img height=\"30px;\" id=\"SettingsImage\" onclick=\"RequestConfigPage();\" src=\"images\\Gear.png\" style=\"vertical-align: middle;\" width=\"30px;\">"); 
-	        printWriter.println("    <label for=\"requestedFilePathName\">File:</label>");
-	        printWriter.println("    <input id=\"requestedFilePathName\" name=\"requestedFilePathName\" readonly size=\"64\" type=\"text\" value=\"" + filePathNameStr + "\" />");
-	        printWriter.println("    <input id=\"deleteBtn\" name=\"deleteBtn\" onclick=\"DoDelete();\" type=\"button\" value=\"Delete\" />");            
-	        printWriter.println("    <input id=\"nextBtn\" name=\"nextBtn\" onclick=\"DoNext();\" type=\"button\" value=\"Next Picture\" />");      
-	        printWriter.println("    <label for=\"requestedDelay\">Delay (5-60 seconds):</label>");
-	        printWriter.println("    <input id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" size=\"3\" type=\"number\" value= \"" + conf.getDelay().toString() + "\"/>");
-	        printWriter.println("    <input id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\" />");       
-			printWriter.println("   </form>");        
-	        printWriter.println("  </div>");      
+	    printWriter.println("  <div class=\"popup\" id=\"ControlsContainer\">");
+		   printWriter.println("   <form id=\"ConfigForm\" method=\"post\" name=\"ConfigForm\">");     
+			  printWriter.println("    <input id=\"action\" name=\"action\" type=\"hidden\" value=\"placeholder\">");	 // Page javascript will modify this via button onclick handler.	
+			  printWriter.println("    <input id=\"availableFiles\" name=\"availableFiles\" type=\"hidden\" value=\"" + result.getAvailableImages().toString() + "\">");			
+			  printWriter.println("    <input id=\"filePathName\" name=\"filePathName\" type=\"hidden\" value=\"" + filePathNameStr + "\">");			
+			  printWriter.println("    <input id=\"serverUrl\" name=\"serverUrl\" type=\"hidden\" value=\"" + url + "\">");	
+     printWriter.println("    <div>");
+	    printWriter.println("     <img height=\"30px;\" id=\"SettingsImage\" onclick=\"RequestConfigPage();\" src=\"images\\GearCyan.png\" style=\"vertical-align: middle;\" width=\"30px;\">");
+     printWriter.println("    </div>");
+     printWriter.println("    <div>");
+     printWriter.println("     <span>");
+	    printWriter.println("      <label class=\"controllabel\" for=\"requestedFilePathName\">File:</label>");
+	    printWriter.println("      <input class=\"controltextbox\" id=\"requestedFilePathName\" name=\"requestedFilePathName\" readonly size=\"64\" type=\"text\" value=\"" + filePathNameStr + "\" />");
+	    printWriter.println("      <input class=\"controlbutton\" id=\"deleteBtn\" name=\"deleteBtn\" onclick=\"DoDelete();\" type=\"button\" value=\"Delete\" />");
+     printWriter.println("      <input class=\"controlbutton\" id=\"nextBtn\" name=\"nextBtn\" onclick=\"DoNext();\" type=\"button\" value=\"Next Picture\" />"); 	    
+     printWriter.println("     </span>");
+     printWriter.println("    </div>");
+     printWriter.println("    <div>");
+     printWriter.println("     <span>");     
+	    printWriter.println("      <label class=\"controllabel\" for=\"requestedDelay\">Delay (5-60 seconds):</label>");
+	    printWriter.println("      <input class=\"controltextbox\" id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" size=\"3\" type=\"number\" value= \"" + conf.getDelay().toString() + "\"/>");
+	    printWriter.println("      <input class=\"controlbutton\" id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\" />");
+     printWriter.println("     </span>");
+     printWriter.println("    </div>");
+			  printWriter.println("   </form>");        
+	    printWriter.println("  </div>");      
         
-        printWriter.println("  <div id=\"ImageContainer\" style=\"align-items: center; display: flex; height: 100vh; justify-content: center; overflow: hidden; width: 100vw; \">");
-        printWriter.println("   <img id=\"DispImage\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width=100vw;\">");
-        printWriter.println("  </div>");   
+	  printWriter.println("  <div id=\"ImageContainer\" style=\"align-items: center; display: flex; height: 98vh; justify-content: center; overflow: hidden; width: 100vw; \">");
+   printWriter.println("   <img id=\"DispImage\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width=100vw;\">");
+   printWriter.println("  </div>");   
         
-        // Conditionally displayed if there are no images available:
+   // Conditionally displayed if there are no images available:
         
-	        printWriter.println("  <div id=\"ErrorContainer\" style=\"align-items: center; background-color: lightblue; display: none; height: 100vh; justify-content: center; overflow: hidden; visibility: collapse; width: 100vw;\">");
-	        printWriter.println("   There are no images available to display in the configured images directory:<br />");
-	        printWriter.println("   " + conf.getDirectory() + ".<br /><br />");    
-	        printWriter.println("   Click anywhere on the page to reveal the control panel<br />");      
-	        printWriter.println("   and use the GEAR icon to access the configuration page<br />");
-	        printWriter.println("   to enter the appropriate directory values.");            
-	        printWriter.println("  </div>"); 
+	     printWriter.println("  <div id=\"ErrorContainer\" style=\"align-items: center; background-color: lightblue; display: none; height: 100vh; justify-content: center; overflow: hidden; visibility: collapse; width: 100vw;\">");
+	     printWriter.println("   There are no images available to display in the configured images directory:<br />");
+	     printWriter.println("   " + conf.getDirectory() + ".<br /><br />");    
+	     printWriter.println("   Click anywhere on the page to reveal the control panel<br />");      
+	     printWriter.println("   and use the GEAR icon to access the configuration page<br />");
+	     printWriter.println("   to enter the appropriate directory values.");            
+	     printWriter.println("  </div>"); 
         
-        printWriter.println(" </body>");
-        printWriter.println("</html>");
+   printWriter.println(" </body>");
+   printWriter.println("</html>");
         
-        printWriter.close();	
+   printWriter.close();	
         
 		diags.logSubExit(whoAmI, "generatePageHtml", "", "");	
 	}	
@@ -313,17 +322,17 @@ public class ImageServer extends HttpServlet {
 	private List<Path> getFilesList(String directory) {
 		diags.logSubCall(whoAmI, "getFilesList", "", "");	
 		
-        Path path = Paths.get(directory);
-        
-        String[] extensions = {"gif", "jpg", "jpeg", "png", "tiff"};
-		
-        List<Path> result = new ArrayList<Path>();
-        
-        try (Stream<Path> walk = Files.walk(path)) {
-            result = walk.filter(Files::isRegularFile)
-            		     .filter(f -> Utils.isEndWith(f.toString(), extensions))
-            			 .collect(Collectors.toList());
-        } catch (IOException e) {
+  Path path = Paths.get(directory);
+  
+  String[] extensions = {"gif", "jpg", "jpeg", "png", "tiff"};
+
+  List<Path> result = new ArrayList<Path>();
+  
+  try (Stream<Path> walk = Files.walk(path)) {
+      result = walk.filter(Files::isRegularFile)
+      		     .filter(f -> Utils.isEndWith(f.toString(), extensions))
+      			 .collect(Collectors.toList());
+  } catch (IOException e) {
 			diags.exceptional(whoAmI, "getFilesList", e.getMessage(), "", false);
 		}        
         
@@ -340,18 +349,19 @@ public class ImageServer extends HttpServlet {
 	private void getDefaultImage(HttpServletResponse response) {
 		diags.logSubCall(whoAmI, "getDefaultImage", "", "");	
         
-        ServletOutputStream outStream = null;
+  ServletOutputStream outStream = null;
+  
 		try {
 			outStream = response.getOutputStream();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
               
-        response.setContentType("image/jpeg");        	
-    	
-        String imgFile = "webapps\\ImageServer\\images\\default.jpg";
-        
-        FileInputStream fin = null;
+  response.setContentType("image/jpeg");        	
+
+  String imgFile = "webapps\\ImageServer\\images\\default.jpg";
+  
+  FileInputStream fin = null;
         
 		try {
 			fin = new FileInputStream(imgFile);
@@ -359,34 +369,37 @@ public class ImageServer extends HttpServlet {
 			diags.exceptional(whoAmI, "getDefaultImage", e.getMessage(), "", false);
 		}
 
-        BufferedInputStream bin = new BufferedInputStream(fin);
-        BufferedOutputStream bout = new BufferedOutputStream(outStream);
-        
-        int ch = 0;
-        
-        try {
+  BufferedInputStream bin = new BufferedInputStream(fin);
+  BufferedOutputStream bout = new BufferedOutputStream(outStream);
+  
+  int ch = 0;
+  
+  try {
 			while(-1 != (ch = bin.read()))
-			    bout.write(ch);
+			 bout.write(ch);
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getDefaultImage", e.getMessage(), "", false);
 		}
 
-        try {
+  try {
 			bin.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getDefaultImage", e.getMessage(), "", false);
 		}
-        try {
+  
+ try {
 			fin.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getDefaultmage", e.getMessage(), "", false);
 		}
-        try {
+ 
+ try {
 			bout.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getDefaultImage", e.getMessage(), "", false);
 		}
-        try {
+ 
+ try {
 			outStream.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getDefaultImage", e.getMessage(), "", false);
@@ -413,9 +426,9 @@ public class ImageServer extends HttpServlet {
 			return;
 		}
 		     
-        response.setContentType("image/jpeg");
-        
-        FileInputStream fin = null;
+  response.setContentType("image/jpeg");
+  
+  FileInputStream fin = null;
         
 		try {
 			fin = new FileInputStream(filePathName);
@@ -429,9 +442,9 @@ public class ImageServer extends HttpServlet {
 			}			
 		}
 
-        BufferedInputStream bin   = new BufferedInputStream(fin);
-        
-        ServletOutputStream outStream = null;
+  BufferedInputStream bin   = new BufferedInputStream(fin);
+  
+  ServletOutputStream outStream = null;
         
 		try {
 			outStream = response.getOutputStream();
@@ -439,11 +452,11 @@ public class ImageServer extends HttpServlet {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}	        
         
-        BufferedOutputStream bout = new BufferedOutputStream(outStream);
-        
-        int ch = 0;
-        
-        try {
+  BufferedOutputStream bout = new BufferedOutputStream(outStream);
+  
+  int ch = 0;
+  
+  try {
 			while(-1 != (ch = bin.read())) {
 				bout.write(ch);
 			}
@@ -451,31 +464,31 @@ public class ImageServer extends HttpServlet {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
 
-        try {
+  try {
 			bin.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
         
-        try {
-			fin.close();
-		} catch (IOException e) {
-			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
-		}
+  try {
+		 fin.close();
+	 } catch (IOException e) {
+		 diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
+	 }
         
-        try {
-			bout.close();
-		} catch (IOException e) {
-			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
-		}
+  try {
+		 bout.close();
+	 } catch (IOException e) {
+	 	diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
+	 }
         
-        try {
-			outStream.close();
-		} catch (IOException e) {
-			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
-		}	                           
+  try {
+	 	outStream.close();
+	 } catch (IOException e) {
+	 	diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
+	 }	                           
         
-		diags.logSubExit(whoAmI, "getNamedImage", "", "");	
+	 diags.logSubExit(whoAmI, "getNamedImage", "", "");	
 	}	
 	
 	/**
@@ -486,23 +499,23 @@ public class ImageServer extends HttpServlet {
 	private void getRandomImage(HttpServletResponse response) {
 		diags.logSubCall(whoAmI, "getRandomImage", "", "");	        
         
-        response.setContentType("image/jpeg");
-		
-        GetRandomFileResult result = getRandomImagePathFileName();
-        
-        String imgPathFileName = "";
+  response.setContentType("image/jpeg");
+
+  GetRandomFileResult result = getRandomImagePathFileName();
+  
+  String imgPathFileName = "";
         
 		diags.logSubInfo(whoAmI, "getRandomImage", result.getRandomPathFileName(), result.getAvailableImages().toString());
         
-        if (0 == result.getAvailableImages()) {
-        	imgPathFileName = "webapps\\ImageServer\\images\\noImage.jpg";
-        } else {         
-        	imgPathFileName = result.getRandomPathFileName();
-        }
+  if (0 == result.getAvailableImages()) {
+  	imgPathFileName = "webapps\\ImageServer\\images\\noImage.jpg";
+  } else {         
+  	imgPathFileName = result.getRandomPathFileName();
+  }
         
 		diags.logSubInfo(whoAmI, "getRandomImage", url, imgPathFileName);	        
             
-        FileInputStream fin = null;
+  FileInputStream fin = null;
         
 		try {
 			fin = new FileInputStream(imgPathFileName);
@@ -516,9 +529,9 @@ public class ImageServer extends HttpServlet {
 			return;
 		}
 
-        BufferedInputStream bin = new BufferedInputStream(fin);
-        
-        ServletOutputStream outStream = null;
+  BufferedInputStream bin = new BufferedInputStream(fin);
+  
+  ServletOutputStream outStream = null;
         
 		try {
 			outStream = response.getOutputStream();
@@ -538,37 +551,37 @@ public class ImageServer extends HttpServlet {
 			return;			
 		}	        
         
-        BufferedOutputStream bout = new BufferedOutputStream(outStream);
-        
-        int ch = 0;
-        
-        try {
+  BufferedOutputStream bout = new BufferedOutputStream(outStream);
+  
+  int ch = 0;
+  
+  try {
 			while(-1 != (ch = bin.read())) {
-			    bout.write(ch);
+			 bout.write(ch);
 			}
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
 
-        try {
+  try {
 			bin.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
         
-        try {
+  try {
 			fin.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
         
-        try {
+  try {
 			bout.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
 		}
         
-        try {
+  try {
 			outStream.close();
 		} catch (IOException e) {
 			diags.exceptional(whoAmI, "getRandomImage", e.getMessage(), "", false);
@@ -587,23 +600,23 @@ public class ImageServer extends HttpServlet {
 	private GetRandomFileResult getRandomImagePathFileName() {
 		diags.logSubCall(whoAmI, "getRandomImagePathFileName", "", "");	
 		
-        List<Path> paths = getFilesList(conf.getDirectory());
-        
-        if (0 != paths.size()) {     
-            Random random = new Random();
-            
-            int index = random.ints(0, paths.size()).findFirst().getAsInt();	
-            
-            String pathFileNameStr = String.format("%s", paths.get(index));
-            
-    		diags.logSubExit(whoAmI, "getRandomImagePathFileName", pathFileNameStr, "");	
-        	
-            return new GetRandomFileResult(paths.size(), pathFileNameStr);
-        }		
+   List<Path> paths = getFilesList(conf.getDirectory());
+   
+   if (0 != paths.size()) {     
+    Random random = new Random();
+    
+    int index = random.ints(0, paths.size()).findFirst().getAsInt();	
+    
+    String pathFileNameStr = String.format("%s", paths.get(index));
+       
+	   diags.logSubExit(whoAmI, "getRandomImagePathFileName", pathFileNameStr, "");	
+   	
+    return new GetRandomFileResult(paths.size(), pathFileNameStr);
+   }		
         
 		diags.logSubExit(whoAmI, "getRandomImagePathFileName", "", "");	
         
-        return new GetRandomFileResult(0, "");
+  return new GetRandomFileResult(0, "");
 	}		
 		
 	/**
@@ -613,7 +626,7 @@ public class ImageServer extends HttpServlet {
 	 * @param response HttpServletResponse object.
 	 */			
 	private void handleConfigAction(HttpServletRequest request, 
-			                        HttpServletResponse response) {
+			                              HttpServletResponse response) {
 		diags.logSubCall(whoAmI, "handleConfigAction", "", "");	
 		
 		conf.loadConfiguration();		
@@ -682,7 +695,7 @@ public class ImageServer extends HttpServlet {
 					
 		conf.saveConfiguration();	
 		
-        showMainPage(response);
+  showMainPage(response);
         
 		diags.logSubExit(whoAmI, "handleConfigAction", "", "");	
 	}		
@@ -694,7 +707,7 @@ public class ImageServer extends HttpServlet {
 	 * @param response HttpServletResponse object.
 	 */			
 	private void handleDeleteAction(HttpServletRequest request, 
-			                        HttpServletResponse response) {
+			                              HttpServletResponse response) {
 		diags.logSubCall(whoAmI, "handleDeleteAction", "", "");		
 		
 		String filePathNameToDeleteStr = request.getParameter("filePathNameToDelete");
@@ -715,7 +728,7 @@ public class ImageServer extends HttpServlet {
 			return;
 		}			
 		
-        String filePathNameToDeleteStrEnc = null;
+  String filePathNameToDeleteStrEnc = null;
         
 		try {
 			filePathNameToDeleteStrEnc = java.net.URLDecoder.decode(filePathNameToDeleteStr, StandardCharsets.UTF_8.name());
@@ -743,7 +756,7 @@ public class ImageServer extends HttpServlet {
 				
 		diags.logSubInfo(whoAmI, "handleDeleteAction", filePathNameToDeleteStrEnc, "");
 		
-        generatePageHtml(response);		
+  generatePageHtml(response);		
 		
 		diags.logSubExit(whoAmI, "handleDeleteAction", "", "");		
 	}
@@ -784,39 +797,39 @@ public class ImageServer extends HttpServlet {
 				
 		printWriter.println("<!DOCTYPE html>");
 		printWriter.println("<html>");
-        printWriter.println(" <head>");
-        printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\" >");
-        printWriter.println("  <script src=\"javascript/common.js\"></script>");
-        printWriter.println(" </head>");        
-        printWriter.println(" <body class=\"cfgpagebodystyle\" id=\"ConfigPagey\" >");
-        printWriter.println("  <div id=\"ControlsContainer\" style=\"align-items: center; background-color: lightblue; height: 500px; justify-content: center; width: 100%;\">");
+  printWriter.println(" <head>");
+  printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\" >");
+  printWriter.println("  <script src=\"javascript/common.js\"></script>");
+  printWriter.println(" </head>");        
+  printWriter.println(" <body class=\"cfgpagebodystyle\" id=\"ConfigPagey\" >");
+  printWriter.println("  <div id=\"ControlsContainer\" style=\"align-items: center; background-color: lightblue; height: 500px; justify-content: center; width: 100%;\">");
 		printWriter.println("   <form id=\"ConfigForm\" method=\"post\" name=\"ControlsForm\">");     	
 		printWriter.println("    <input id=\"action\" name=\"action\" type=\"hidden\" value=\"placeholder\">");  // Page javascript will modify this via button onclick handler.				
 		printWriter.println("    <input id=\"serverUrl\" name=\"serverUrl\" type=\"hidden\"  value=\"" + url + "\">");	
 		printWriter.println("    <h1 style=\"text-align:center;\">Server Configuration</h1>");
 		printWriter.println("    <br /><br />");
-        printWriter.println("    <div id=\"ParmsContainer\" style=\"align-items: center; background-color: lightblue; height: 100vh; margin: 0 auto; position: relative; width: 50%;\">");		
-        printWriter.println("     <label for=\"requestedDirectory\">Photos Directory:</label>");
-        printWriter.println("     <input id=\"requestedDirectory\" name=\"requestedDirectory\" type=\"text\" value=\"" + conf.getDirectory() + "\"/>");  
+  printWriter.println("    <div id=\"ParmsContainer\" style=\"align-items: center; background-color: lightblue; height: 100vh; margin: 0 auto; position: relative; width: 50%;\">");		
+  printWriter.println("     <label for=\"requestedDirectory\">Photos Directory:</label>");
+  printWriter.println("     <input id=\"requestedDirectory\" name=\"requestedDirectory\" type=\"text\" value=\"" + conf.getDirectory() + "\"/>");  
 		printWriter.println("     <br />");
-        printWriter.println("     <label for=\"availableImages\">Images available:</label>");
-        printWriter.println("     <input id=\"availableImage\" readonly type=\"text\" value=\"" + availableFiles.toString() + "\">");  
+  printWriter.println("     <label for=\"availableImages\">Images available:</label>");
+  printWriter.println("     <input id=\"availableImage\" readonly type=\"text\" value=\"" + availableFiles.toString() + "\">");  
 		printWriter.println("     <br />");		
-        printWriter.println("     <label for=\"requestedDeleteDirectory\">Delete Target Directory:</label>");
-        printWriter.println("     <input id=\"requestedDeleteDirectory\" name=\"requestedDeleteDirectory\" type=\"text\" value=\"" + conf.getDeletedImagesDirectory() + "\">");  
+  printWriter.println("     <label for=\"requestedDeleteDirectory\">Delete Target Directory:</label>");
+  printWriter.println("     <input id=\"requestedDeleteDirectory\" name=\"requestedDeleteDirectory\" type=\"text\" value=\"" + conf.getDeletedImagesDirectory() + "\">");  
 		printWriter.println("     <br />");
-        printWriter.println("     <label for=\"requestedDelay\">Delay (5-60 seconds):</label>");
-        printWriter.println("     <input id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" size=\"3\" type=\"number\" value=\"" + conf.getDelay().toString() + "\">");
+  printWriter.println("     <label for=\"requestedDelay\">Delay (5-60 seconds):</label>");
+  printWriter.println("     <input id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" size=\"3\" type=\"number\" value=\"" + conf.getDelay().toString() + "\">");
 		printWriter.println("     <br /><br />");
-        printWriter.println("     <input id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\" />");
-        printWriter.println("     <input id=\"backBtn\" name=\"backBtn\" onclick=\"GoBack();\" type=\"button\" value=\"Return to Main Page\" />");  
-        printWriter.println("    </div>");
+  printWriter.println("     <input id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\" />");
+  printWriter.println("     <input id=\"backBtn\" name=\"backBtn\" onclick=\"GoBack();\" type=\"button\" value=\"Return to Main Page\" />");  
+  printWriter.println("    </div>");
 		printWriter.println("   </form>");        
-        printWriter.println("  </div>");              
-        printWriter.println(" </body>");
-        printWriter.println("</html>");
+  printWriter.println("  </div>");              
+  printWriter.println(" </body>");
+  printWriter.println("</html>");
         
-        printWriter.close();
+  printWriter.close();
         
 		diags.logSubExit(whoAmI, "showConfigPage", "", "");	
 	}			
@@ -829,7 +842,7 @@ public class ImageServer extends HttpServlet {
 	private void showMainPage(HttpServletResponse response) {
 		diags.logSubCall(whoAmI, "showMainPage", "", "");	
         		
-        generatePageHtml(response);
+  generatePageHtml(response);
         
 		diags.logSubExit(whoAmI, "showMainPage", "", "");        
 	}	
