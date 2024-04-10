@@ -22,26 +22,25 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 
 import conf.Configuration;
 import containers.GetRandomFileResult;
+import enums.FileTypes;
 import utils.Diagnostics;
 import utils.Utils;
 
@@ -252,14 +251,35 @@ public class ImageServer extends HttpServlet {
 			
 			return;
 		}
-		
+  
 		printWriter.println("<!DOCTYPE html>");
-		printWriter.println("<html>");
+		printWriter.println("<html lang=\"en\">");
   printWriter.println(" <head>");
   printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\">");
   printWriter.println("  <script src=\"javascript/common.js\"></script>");
+  printWriter.println("  <title>Slide Show</title>");  
   printWriter.println(" </head>");        
-  printWriter.println(" <body class=\"mainpagebodystyle\" id=\"MainPage\" onLoad=\"InitializePage();\">");
+  
+  enums.FileTypes fileType = enums.FileTypes.fromFilePathName(filePathNameStr);
+  
+  diags.logSubInfo(whoAmI, "generatePageHtml", filePathNameStr, fileType.toString()); 
+  
+  switch (fileType) {
+   case IMAGE: {
+    printWriter.println(" <body class=\"mainpagebodystyle\" id=\"MainPage\" onLoad=\"InitializeImagePage();\">");   
+   }
+   break;
+  
+   case VIDEO: {
+    printWriter.println(" <body class=\"mainpagebodystyle\" id=\"MainPage\" onLoad=\"InitializeVideoPage();\">");   
+   }
+   break;
+   
+   case UNKNOWN:
+   default: {
+    printWriter.println(" <body class=\"mainpagebodystyle\" id=\"MainPage\" onLoad=\"InitializeImagePage();\">");    
+   }
+  }
         
   // Conditionally displayed when the user clicks the screen: 
         
@@ -270,37 +290,58 @@ public class ImageServer extends HttpServlet {
 			  printWriter.println("    <input id=\"filePathName\" name=\"filePathName\" type=\"hidden\" value=\"" + filePathNameStr + "\">");			
 			  printWriter.println("    <input id=\"serverUrl\" name=\"serverUrl\" type=\"hidden\" value=\"" + url + "\">");	
      printWriter.println("    <div>");
-	    printWriter.println("     <img height=\"30px;\" id=\"SettingsImage\" onclick=\"RequestConfigPage();\" src=\"images\\GearCyan.png\" style=\"vertical-align: middle;\" width=\"30px;\">");
+	    printWriter.println("     <img alt=\"button\" height=\"30\" id=\"SettingsImage\" onclick=\"RequestConfigPage();\" src=\"images/GearCyan.png\" style=\"vertical-align: middle;\" width=\"30\">");
      printWriter.println("    </div>");
      printWriter.println("    <div>");
      printWriter.println("     <span>");
 	    printWriter.println("      <label class=\"controllabel\" for=\"requestedFilePathName\">File:</label>");
-	    printWriter.println("      <input class=\"controltextbox\" id=\"requestedFilePathName\" name=\"requestedFilePathName\" readonly size=\"64\" type=\"text\" value=\"" + filePathNameStr + "\" />");
-	    printWriter.println("      <input class=\"controlbutton\" id=\"deleteBtn\" name=\"deleteBtn\" onclick=\"DoDelete();\" type=\"button\" value=\"Delete\" />");
-     printWriter.println("      <input class=\"controlbutton\" id=\"nextBtn\" name=\"nextBtn\" onclick=\"DoNext();\" type=\"button\" value=\"Next Picture\" />"); 	    
+	    printWriter.println("      <input class=\"controltextbox\" id=\"requestedFilePathName\" name=\"requestedFilePathName\" readonly size=\"64\" type=\"text\" value=\"" + filePathNameStr + "\">");
+	    printWriter.println("      <input class=\"controlbutton\" id=\"deleteBtn\" name=\"deleteBtn\" onclick=\"DoDelete();\" type=\"button\" value=\"Delete\">");
+     printWriter.println("      <input class=\"controlbutton\" id=\"nextBtn\" name=\"nextBtn\" onclick=\"DoNext();\" type=\"button\" value=\"Next Picture\">"); 	    
      printWriter.println("     </span>");
      printWriter.println("    </div>");
      printWriter.println("    <div>");
      printWriter.println("     <span>");     
 	    printWriter.println("      <label class=\"controllabel\" for=\"requestedDelay\">Delay (5-60 seconds):</label>");
-	    printWriter.println("      <input class=\"controltextbox\" id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" size=\"3\" type=\"number\" value= \"" + conf.getDelay().toString() + "\"/>");
-	    printWriter.println("      <input class=\"controlbutton\" id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\" />");
+	    printWriter.println("      <input class=\"controltextbox\" id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" type=\"number\" value= \"" + conf.getDelay().toString() + "\">");
+	    printWriter.println("      <input class=\"controlbutton\" id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\">");
      printWriter.println("     </span>");
      printWriter.println("    </div>");
 			  printWriter.println("   </form>");        
 	    printWriter.println("  </div>");      
-        
-	  printWriter.println("  <div id=\"ImageContainer\" style=\"align-items: center; display: flex; height: 98vh; justify-content: center; overflow: hidden; width: 100vw; \">");
-   printWriter.println("   <img id=\"DispImage\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width=100vw;\">");
-   printWriter.println("  </div>");   
+	    
+	    switch (fileType) {
+	     case IMAGE: {
+	      printWriter.println("  <div id=\"ImageContainer\" style=\"align-items: center; display: flex; height: 98vh; justify-content: center; overflow: hidden; width: 100vw;\">");
+	      printWriter.println("   <img alt=\"Picture\" id=\"DispImage\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width: 100vw;\">");
+	      printWriter.println("  </div>");	     
+	     }
+	     break;
+	    
+      case VIDEO: {
+       printWriter.println("  <div id=\"VideoContainer\" style=\"align-items: center; display: flex; height: 98vh; justify-content: center; overflow: hidden; width: 100vw;\">");
+       printWriter.println("   <video autoplay=\"\" muted=\"\" playsinline=\"\" id=\"DispVideo\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" onended=\"HandleVideoEnded();\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width: 100vw;\">");
+       printWriter.println("   </video>"); 
+       printWriter.println("  </div>");       
+      }
+      break;
+     
+      case UNKNOWN: 
+	     default: {
+       printWriter.println("  <div id=\"ImageContainer\" style=\"align-items: center; display: flex; height: 98vh; justify-content: center; overflow: hidden; width: 100vw; \">");
+       printWriter.println("   <img alt=\"Picture\" id=\"DispImage\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width: 100vw;\">");
+       printWriter.println("  </div>");	     
+	     }
+	    break;
+	    }
         
    // Conditionally displayed if there are no images available:
         
 	     printWriter.println("  <div id=\"ErrorContainer\" style=\"align-items: center; background-color: lightblue; display: none; height: 100vh; justify-content: center; overflow: hidden; visibility: collapse; width: 100vw;\">");
-	     printWriter.println("   There are no images available to display in the configured images directory:<br />");
-	     printWriter.println("   " + conf.getDirectory() + ".<br /><br />");    
-	     printWriter.println("   Click anywhere on the page to reveal the control panel<br />");      
-	     printWriter.println("   and use the GEAR icon to access the configuration page<br />");
+	     printWriter.println("   There are no images available to display in the configured images directory:<br>");
+	     printWriter.println("   " + conf.getDirectory() + ".<br><br>");    
+	     printWriter.println("   Click anywhere on the page to reveal the control panel<br>");      
+	     printWriter.println("   and use the GEAR icon to access the configuration page<br>");
 	     printWriter.println("   to enter the appropriate directory values.");            
 	     printWriter.println("  </div>"); 
         
@@ -313,7 +354,7 @@ public class ImageServer extends HttpServlet {
 	}	
 		
 	/**
-	 * Get list of all available image files.
+	 * Get list of all available image/video files.
 	 * <p>
 	 * @param directory String containing directory name.
 	 * <p>.
@@ -324,21 +365,21 @@ public class ImageServer extends HttpServlet {
 		
   Path path = Paths.get(directory);
   
-  String[] extensions = {"gif", "jpg", "jpeg", "png", "tiff"};
+  String[] extensions = {"avi", "gif", "jpg", "jpeg", "mpg", "mpeg", "mp4", "png", "tiff"};
 
   List<Path> result = new ArrayList<Path>();
   
   try (Stream<Path> walk = Files.walk(path)) {
       result = walk.filter(Files::isRegularFile)
-      		     .filter(f -> Utils.isEndWith(f.toString(), extensions))
-      			 .collect(Collectors.toList());
+      		           .filter(f -> Utils.isEndWith(f.toString(), extensions))
+      			          .collect(Collectors.toList());
   } catch (IOException e) {
 			diags.exceptional(whoAmI, "getFilesList", e.getMessage(), "", false);
 		}        
         
 		diags.logSubCall(whoAmI, "getFilesList", "", String.format("Available files = %d", result.size()));
         
-        return result;
+  return result;
 	}
 	
 	/**
@@ -707,6 +748,8 @@ public class ImageServer extends HttpServlet {
 	 * @param response HttpServletResponse object.
 	 */			
 	private void handleDeleteAction(HttpServletRequest request, 
+
+ 
 			                              HttpServletResponse response) {
 		diags.logSubCall(whoAmI, "handleDeleteAction", "", "");		
 		
@@ -796,33 +839,34 @@ public class ImageServer extends HttpServlet {
 		response.setContentType("text/html");
 				
 		printWriter.println("<!DOCTYPE html>");
-		printWriter.println("<html>");
+		printWriter.println("<html lang=\"en\">");
   printWriter.println(" <head>");
-  printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\" >");
+  printWriter.println("  <link href=\"css/Styles.css\" rel=\"stylesheet\">");
   printWriter.println("  <script src=\"javascript/common.js\"></script>");
+  printWriter.println("  <title>Slide Show Configuration</title>");
   printWriter.println(" </head>");        
-  printWriter.println(" <body class=\"cfgpagebodystyle\" id=\"ConfigPagey\" >");
+  printWriter.println(" <body class=\"cfgpagebodystyle\" id=\"ConfigPagey\">");
   printWriter.println("  <div id=\"ControlsContainer\" style=\"align-items: center; background-color: lightblue; height: 500px; justify-content: center; width: 100%;\">");
 		printWriter.println("   <form id=\"ConfigForm\" method=\"post\" name=\"ControlsForm\">");     	
 		printWriter.println("    <input id=\"action\" name=\"action\" type=\"hidden\" value=\"placeholder\">");  // Page javascript will modify this via button onclick handler.				
 		printWriter.println("    <input id=\"serverUrl\" name=\"serverUrl\" type=\"hidden\"  value=\"" + url + "\">");	
 		printWriter.println("    <h1 style=\"text-align:center;\">Server Configuration</h1>");
-		printWriter.println("    <br /><br />");
+		printWriter.println("    <br><br>");
   printWriter.println("    <div id=\"ParmsContainer\" style=\"align-items: center; background-color: lightblue; height: 100vh; margin: 0 auto; position: relative; width: 50%;\">");		
   printWriter.println("     <label for=\"requestedDirectory\">Photos Directory:</label>");
-  printWriter.println("     <input id=\"requestedDirectory\" name=\"requestedDirectory\" type=\"text\" value=\"" + conf.getDirectory() + "\"/>");  
-		printWriter.println("     <br />");
+  printWriter.println("     <input id=\"requestedDirectory\" name=\"requestedDirectory\" type=\"text\" value=\"" + conf.getDirectory() + "\">");  
+		printWriter.println("     <br>");
   printWriter.println("     <label for=\"availableImages\">Images available:</label>");
-  printWriter.println("     <input id=\"availableImage\" readonly type=\"text\" value=\"" + availableFiles.toString() + "\">");  
-		printWriter.println("     <br />");		
+  printWriter.println("     <input id=\"availableImages\" readonly type=\"text\" value=\"" + availableFiles.toString() + "\">");  
+		printWriter.println("     <br>");		
   printWriter.println("     <label for=\"requestedDeleteDirectory\">Delete Target Directory:</label>");
   printWriter.println("     <input id=\"requestedDeleteDirectory\" name=\"requestedDeleteDirectory\" type=\"text\" value=\"" + conf.getDeletedImagesDirectory() + "\">");  
-		printWriter.println("     <br />");
+		printWriter.println("     <br>");
   printWriter.println("     <label for=\"requestedDelay\">Delay (5-60 seconds):</label>");
-  printWriter.println("     <input id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" size=\"3\" type=\"number\" value=\"" + conf.getDelay().toString() + "\">");
-		printWriter.println("     <br /><br />");
-  printWriter.println("     <input id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\" />");
-  printWriter.println("     <input id=\"backBtn\" name=\"backBtn\" onclick=\"GoBack();\" type=\"button\" value=\"Return to Main Page\" />");  
+  printWriter.println("     <input id=\"requestedDelay\" name=\"requestedDelay\" max=\"60\" min=\"5\" type=\"number\" value=\"" + conf.getDelay().toString() + "\">");
+		printWriter.println("     <br><br>");
+  printWriter.println("     <input id=\"applyBtn\" name=\"applyBtn\" onclick=\"SubmitConfig();\" type=\"button\" value=\"Apply\">");
+  printWriter.println("     <input id=\"backBtn\" name=\"backBtn\" onclick=\"GoBack();\" type=\"button\" value=\"Return to Main Page\">");  
   printWriter.println("    </div>");
 		printWriter.println("   </form>");        
   printWriter.println("  </div>");              

@@ -39,9 +39,17 @@ function HideControls() {
 	
 	delayTimer = setInterval(DelayTimerElapsed, delay);
 } 
+
+function HandleVideoEnded() {	 	 
+	console.log("> HandleVideoEnded");
+	
+	ReloadPage();
+	              
+	console.log("< HandleVideoEnded)");	              
+} 
  
-function InitializePage() {
-	console.log("> InitializePage()");
+function InitializeImagePage() {
+	console.log("> InitializeImagePage()");
 
      var availableFiles = document.getElementById("availableFiles").value;
 	 var delay = document.getElementById("requestedDelay").value * 1000;
@@ -65,7 +73,34 @@ function InitializePage() {
 	 	delayTimer = setInterval(DelayTimerElapsed, delay);
 	 }
 	 
-	console.log("< InitializePage()");	 
+	console.log("< InitializeImagePage()");	 
+} 
+
+function InitializeVideoPage() {
+	console.log("> InitializeVideoPage()");
+
+     var availableFiles = document.getElementById("availableFiles").value;
+	 
+	 if (0 == availableFiles) {
+	    document.getElementById("ErrorContainer").style.display    = "flex";		 
+		document.getElementById("ErrorContainer").style.visibility = "visible";		 
+	    document.getElementById("VideoContainer").style.display    = "none";	
+	    document.getElementById("VideoContainer").style.visibility = "collapse";		 
+	 } else {
+		document.getElementById("ErrorContainer").style.display    = "none";
+		document.getElementById("ErrorContainer").style.visibility = "collapse";
+	    document.getElementById("VideoContainer").style.display    = "flex";
+	    document.getElementById("VideoContainer").style.visibility = "visible";	    
+	 }
+	 
+	 document.onclick = ShowControls;
+	 document.getElementById("DispVideo").onclick = ShowControls;
+	 
+	 if (null != delayTimer) {
+	 	clearInterval(delayTimer);
+	 }
+	 
+	console.log("< InitializeVideoPage()");	 
 } 
  
 function ReloadPage() {
