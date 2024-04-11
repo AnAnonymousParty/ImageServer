@@ -320,7 +320,7 @@ public class ImageServer extends HttpServlet {
 	    
       case VIDEO: {
        printWriter.println("  <div id=\"VideoContainer\" style=\"align-items: center; display: flex; height: 98vh; justify-content: center; overflow: hidden; width: 100vw;\">");
-       printWriter.println("   <video autoplay=\"\" muted=\"\" playsinline=\"\" id=\"DispVideo\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" onended=\"HandleVideoEnded();\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width: 100vw;\">");
+       printWriter.println("   <video autoplay=\"\" id=\"DispVideo\" muted=\"\" playsinline=\"\" poster=\"images/loading.gif\" src=\"" + url + "/ImageServer/ImageServer?action=getNamedImage&requestedFilePathName=" + filePathNameEncStr + "\" onended=\"HandleVideoEnded();\" style=\"height: 100vh; object-fit: scale-down; overflow: hidden; width: 100vw;\">");
        printWriter.println("   </video>"); 
        printWriter.println("  </div>");       
       }
